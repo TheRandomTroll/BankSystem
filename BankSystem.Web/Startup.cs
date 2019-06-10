@@ -61,16 +61,9 @@ namespace BankSystem.Web
 
         private void ConfigureDatabase()
         {
-            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder
-            {
-                DataSource = ".\\SQLEXPRESS",
-                InitialCatalog = "master",
-                UserID = "SA",
-            };
+            
 
-            builder["Trusted_Connection"] = true;
-
-            using (SqlConnection connection = new SqlConnection(builder.ConnectionString))
+            using (SqlConnection connection = new SqlConnection(UtilityMethods.GenerateConnectionString()))
             {
                 connection.Open();
 
@@ -82,7 +75,7 @@ namespace BankSystem.Web
                     command.CommandText = "IF NOT EXISTS(SELECT * FROM sys.databases WHERE Name = 'BankSystem') CREATE DATABASE BankSystem";
                     command.ExecuteNonQuery();
 
-                    transaction = connection.BeginTransaction("SampleTransaction");
+                    transaction = connection.BeginTransaction();
                     command.Transaction = transaction;
 
                     StringBuilder sb = new StringBuilder("USE BankSystem;");
