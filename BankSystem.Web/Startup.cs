@@ -141,6 +141,43 @@ namespace BankSystem.Web
                     command.CommandText = sb.ToString();
                     command.ExecuteNonQuery();
 
+                    sb.Clear();
+                    sb.Append("USE BankSystem;");
+                    sb.Append("GO");
+                    sb.Append("");
+                    sb.Append("CREATE TRIGGER tr_UpdateAccounts");
+                    sb.Append("ON Transactions");
+                    sb.Append("AFTER INSERT");
+                    sb.Append("AS");
+                    sb.Append("BEGIN");
+                    sb.Append("BEGIN TRAN");
+                    sb.Append("UPDATE a");
+                    sb.Append("SET Balance = CASE");
+                    sb.Append("WHEN i.TransactionType = 'CREDIT' THEN Balance - i.Amount");
+                    sb.Append("WHEN i.TransactionType = 'DEBIT' THEN Balance + i.Amount");
+                    sb.Append("END");
+                    sb.Append("FROM Accounts AS a");
+                    sb.Append("INNER JOIN inserted AS i");
+                    sb.Append("ON i.AccountId = a.Id");
+                    sb.Append("");
+                    sb.Append("DECLARE @NewBalance NUMERIC =");
+                    sb.Append("(");
+                    sb.Append("SELECT a.Balance FROM Accounts AS a INNER JOIN inserted AS i ON i.AccountId = a.Id");
+                    sb.Append(")");
+                    sb.Append("");
+                    sb.Append("IF(@NewBalance < 0)");
+                    sb.Append("BEGIN");
+                    sb.Append("RAISERROR('The account you are trying to credit from has insufficient money.', 16, 1);");
+                    sb.Append("ROLLBACK");
+                    sb.Append("END");
+                    sb.Append("ELSE");
+                    sb.Append("BEGIN");
+                    sb.Append("COMMIT");
+                    sb.Append("END");
+                    sb.Append("COMMIT");
+                    sb.Append("END;");
+                    command.CommandText = sb.ToString();
+                    command.ExecuteNonQuery();
                     transaction.Commit();
                 }
                 catch (Exception ex)
